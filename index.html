@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LumiGem Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F6FB;--card:#FFFFFF;--ink:#14202B;--muted:#5B6B7A;--gem:#0B6E5F;--gem-ink:#FFFFFF;--light:#F5B72E;--line:#DCE3EC;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0F1A24;--card:#172633;--ink:#EAF0F6;--muted:#9FB0C0;--gem:#2FB89F;--gem-ink:#06231D;--light:#F5B72E;--line:#2A3D4D}}
+:root[data-theme="dark"]{--bg:#0F1A24;--card:#172633;--ink:#EAF0F6;--muted:#9FB0C0;--gem:#2FB89F;--gem-ink:#06231D;--light:#F5B72E;--line:#2A3D4D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5}
+header{padding:28px 20px 18px;max-width:900px;margin:0 auto}
+.brand{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0}
+.brand span{color:var(--gem)}
+.brand i{font-style:normal;display:inline-block;width:.45em;height:.45em;background:var(--light);transform:rotate(45deg);margin-left:.15em;vertical-align:.1em;border-radius:2px}
+.tag{margin:6px 0 0;color:var(--muted);font-size:15px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 20px 14px;max-width:900px;margin:0 auto}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;padding:8px 16px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--gem);color:var(--gem-ink);border-color:var(--gem)}
+.chip:focus-visible,.buy:focus-visible{outline:3px solid var(--light);outline-offset:2px}
+main{max-width:900px;margin:0 auto;padding:0 20px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.pic{height:96px;border-radius:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--gem) 18%,transparent),color-mix(in srgb,var(--light) 28%,transparent));display:flex;align-items:center;justify-content:center;font-size:44px}
+.name{font-weight:600;font-size:15px;margin:4px 0 0}
+.desc{font-size:13px;color:var(--muted);margin:0;flex:1}
+.price{font-weight:800;font-size:18px}
+.buy{display:block;text-align:center;text-decoration:none;background:var(--gem);color:var(--gem-ink);font-weight:600;font-size:14px;padding:10px;border-radius:10px;margin-top:6px}
+#admin{max-width:900px;margin:0 auto;padding:0 20px 16px}#admin:empty{display:none}#admin details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}#admin summary{font-weight:600;cursor:pointer}#admin input,#admin button{font:inherit;width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}#admin button{background:var(--gem);color:var(--gem-ink);border:0;font-weight:600;cursor:pointer}#admin .msg{font-size:13px;color:var(--muted);margin:8px 0 0}.pic img{width:100%;height:100%;object-fit:cover;border-radius:10px}.del{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:4px}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 20px 30px}
+</style>
+</head>
+<body>
+<header>
+  <h1 class="brand">Lumi<span>Gem</span><i></i></h1>
+  <p class="tag">Pick what you like. Tap order. We reply on WhatsApp.</p>
+</header>
+<nav class="chips" id="chips" aria-label="Categories"></nav>
+<section id="admin"></section>
+<main id="grid"></main>
+<footer>Pay after we confirm your order and delivery details on WhatsApp.</footer>
+<script type="application/json" id="data">{"whatsapp":"2349153108370","products":[{"name":"Sample phone case","price":3500,"cat":"Phone","icon":"📱","desc":"Replace with your real product."},{"name":"Sample earbuds","price":8000,"cat":"Phone","icon":"🎧","desc":"Replace with your real product."},{"name":"Sample hair oil","price":4500,"cat":"Beauty","icon":"💧","desc":"Replace with your real product."}]}</script>
+<script>
+var DATA = JSON.parse(document.getElementById("data").textContent);
+var PRODUCTS = DATA.products, current = "All", ADMIN = null;
+function money(n){return "\u20A6" + Number(n).toLocaleString("en-NG");}
+function chips(){
+  var cats = ["All"]; PRODUCTS.forEach(function(p){ if(cats.indexOf(p.cat)<0) cats.push(p.cat); });
+  if(cats.indexOf(current)<0) current="All";
+  var box = document.getElementById("chips"); box.innerHTML = "";
+  cats.forEach(function(c){
+    var b = document.createElement("button"); b.className="chip"; b.textContent=c;
+    b.setAttribute("aria-pressed", c===current); b.onclick=function(){current=c; chips(); grid();};
+    box.appendChild(b);
+  });
+}
+function grid(){
+  var g = document.getElementById("grid"); g.innerHTML = "";
+  PRODUCTS.forEach(function(p,i){
+    if(current!=="All" && p.cat!==current) return;
+    var msg = "Hi LumiGem, I want to order: " + p.name + " (" + money(p.price) + ")";
+    var d = document.createElement("article"); d.className="item";
+    d.innerHTML = '<div class="pic" aria-hidden="true"></div><h2 class="name"></h2><p class="desc"></p><div class="price">'+money(p.price)+'</div><a class="buy" target="_blank" rel="noopener">Order on WhatsApp</a>';
+    var pic = d.querySelector(".pic");
+    if(p.img){ var im=document.createElement("img"); im.src=p.img; im.alt=""; pic.appendChild(im); } else { pic.textContent = p.icon || "\uD83D\uDECD\uFE0F"; }
+    d.querySelector(".name").textContent = p.name;
+    d.querySelector(".desc").textContent = p.desc || "";
+    d.querySelector(".buy").href = "https://wa.me/" + DATA.whatsapp + "?text=" + encodeURIComponent(msg);
+    if(ADMIN){ var x=document.createElement("button"); x.className="del"; x.textContent="Remove this product"; x.onclick=function(){ if(confirm("Remove "+p.name+"?")){ PRODUCTS.splice(i,1); ADMIN.save("Removed."); } }; d.appendChild(x); }
+    g.appendChild(d);
+  });
+}
+chips(); grid();
+
+// Owner-only: add products, then save the page as a new version.
+(async function(){
+  try{
+    if(!window.claude) return;
+    var user = await claude.use("user");
+    if(!(user && user.isOwner())) return;
+    var art = await claude.use("artifact");
+    if(!art) return;
+    var assets = await claude.use("assets");
+    var box = document.getElementById("admin");
+    box.innerHTML = '<details open><summary>Add a product (only you see this)</summary><input id="an" placeholder="Product name"><input id="ap" placeholder="Price in naira, e.g. 5000" inputmode="numeric"><input id="ac" placeholder="Category, e.g. Phone"><input id="ad" placeholder="Short description"><input id="af" type="file" accept="image/*"><button id="ab" type="button">Add product</button><p class="msg" id="am"></p></details>';
+    var msg = function(t){ document.getElementById("am").textContent = t; };
+    ADMIN = { save: async function(done){
+      msg("Saving…");
+      try{
+        var c = document.documentElement.cloneNode(true);
+        ["chips","grid","admin"].forEach(function(id){ c.querySelector("#"+id).innerHTML=""; });
+        c.querySelector("#data").textContent = JSON.stringify(DATA).replace(/</g,"\\u003c");
+        await art.publish("<!DOCTYPE html>\n" + c.outerHTML);
+        msg(done);
+      }catch(e){ msg("Could not save: " + (e && e.message ? e.message : e.code || "try again")); }
+    }};
+    grid();
+    document.getElementById("ab").onclick = async function(){
+      var name = document.getElementById("an").value.trim();
+      var price = Number(document.getElementById("ap").value.replace(/[^0-9.]/g,""));
+      if(!name || !price){ msg("Add a name and a price."); return; }
+      var p = { name:name, price:price, cat:document.getElementById("ac").value.trim()||"Shop", desc:document.getElementById("ad").value.trim() };
+      var f = document.getElementById("af").files[0];
+      if(f){
+        if(!assets){ msg("Photo upload is not available. Add without a photo."); return; }
+        try{ msg("Uploading photo…"); var up = await assets.upload(f); p.img = up.url; }
+        catch(e){ msg("Photo upload failed. Try a smaller photo."); return; }
+      }
+      PRODUCTS.push(p);
+      await ADMIN.save("Added. The page is updating…");
+    };
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
